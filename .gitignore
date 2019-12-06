@@ -9,3 +9,7 @@ gradlew
 gradlew.bat
 build/
 /java/Common/src/main/main1.iml
+java/Bim/bim.iml
+*.jar
+*.class
+target/
