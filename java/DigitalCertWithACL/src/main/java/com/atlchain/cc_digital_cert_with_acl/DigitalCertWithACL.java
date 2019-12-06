@@ -1,5 +1,6 @@
 package com.atlchain.cc_digital_cert_with_acl;
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.ssl.OpenSsl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -83,18 +84,19 @@ public class DigitalCertWithACL extends ChaincodeBase {
         String putKey = args.get(0);
         String jsonStr = args.get(1);
 
+        JSONObject jsonObject = JSONObject.parseObject(jsonStr);
+
+
         System.out.println("putKey: " + putKey);
         System.out.println("jsonStr: " + jsonStr);
 
         // get regioncode
         byte[] userByte = stub.getCreator();
         String regionCode = Utils.getRegioncode(userByte);
-        System.out.println("regioncode:" + regionCode);
-        String key = regionCode + putKey;
-        System.out.println("key:" + key);
+        jsonObject.put("regioncode", regionCode);
 
-        stub.putStringState(key, jsonStr);
-        return newSuccessResponse("Invoke finished successfully." );
+        stub.putStringState(putKey, jsonObject.toJSONString());
+        return newSuccessResponse("Successfully");
     }
 
     private Response putRecordBytes(ChaincodeStub stub, List<byte[]> args){
@@ -131,7 +133,8 @@ public class DigitalCertWithACL extends ChaincodeBase {
         while (iterator.hasNext()) {
             KeyValue kv = iterator.next();
             System.out.println("kv :" + kv.getKey());
-            if (!Utils.isAccessable(regioncode, kv.getKey().substring(0, 6))) {
+            System.out.println("kv :" + kv.getStringValue());
+            if (!Utils.isAccessable(regioncode, JSONObject.parseObject(kv.getStringValue()).get("regioncode").toString() )) {
                 continue;
             }
 
@@ -165,7 +168,9 @@ public class DigitalCertWithACL extends ChaincodeBase {
         byte[] userByte = stub.getCreator();
         String regioncode = Utils.getRegioncode(userByte);
 
-        if (Utils.isAccessable(regioncode, key.substring(0, 6))) {
+        JSONObject jsonObject = JSONObject.parseObject(new String(tmpVal));
+
+        if (Utils.isAccessable(regioncode, jsonObject.get("regioncode").toString())) {
             val = tmpVal;
         } else {
             return newErrorResponse(String.format("Error: state for %s is null", key));
