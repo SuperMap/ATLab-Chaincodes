@@ -11,6 +11,8 @@ import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -24,6 +26,17 @@ public class BCGISChaincode extends ChaincodeBase {
 
     public static void main(String[] args) {
         System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
+        System.setProperty("file.encoding","UTF-8");
+
+        try {
+            Field charset = Charset.class.getDeclaredField("defaultCharset");
+            charset.setAccessible(true);
+            charset.set(null,null);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
         new BCGISChaincode().start(args);
     }
 
