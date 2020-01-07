@@ -74,6 +74,15 @@ public class BCGISChaincode extends ChaincodeBase {
             if (func.equals("GetRecordByKeyRangeByte")) {
                 return getRecordByKeyRangeByte(stub, params);
             }
+            if (func.equals("GetRecordByKeyRangeByteNoBase64")) {
+                return getRecordByKeyRangeByteNoBase64(stub, params);
+            }
+            if (func.equals("GetRecordBySelector")) {
+                return getRecordBySelector(stub, params);
+            }
+            if(func.equals("DeleteRecordByKey")){
+                return deleteRecordByKey(stub, params);
+            }
             return newErrorResponse("Invalid invoke function name.");
         } catch (Throwable e) {
             return newErrorResponse(e);
@@ -218,4 +227,74 @@ public class BCGISChaincode extends ChaincodeBase {
         String message = "Query key->\"" + argsNeeded + "\" successfully";
         return newSuccessResponse(message, strBuilder.toString().getBytes());
     }
+
+    // TODO Try to get information without base64 encoding
+    private Response getRecordByKeyRangeByteNoBase64(ChaincodeStub stub, List<String> args) {
+        int argsNeeded = 2;
+        if (args.size() != argsNeeded){
+            return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
+        }
+        String startKey = args.get(0);
+        String endKey = args.get(1);
+        StringBuilder strBuilder = new StringBuilder("");
+        boolean shouldAddComma = false;
+        QueryResultsIterator<KeyValue> Results = stub.getStateByRange(startKey, endKey);
+        Iterator<KeyValue> iter = Results.iterator();
+        while(iter.hasNext())
+        {
+            if(shouldAddComma){
+                strBuilder.append(",");
+            }
+            KeyValue keyValue = iter.next();
+            strBuilder.append(keyValue.getValue());
+            shouldAddComma = true;
+        }
+
+        String message = "Query key->\"" + argsNeeded + "\" successfully";
+        return newSuccessResponse(message, strBuilder.toString().getBytes());
+    }
+
+    private Response getRecordBySelector(ChaincodeStub stub, List<String> args) {
+        int argsNeeded = 1;
+        if (args.size() != argsNeeded){
+            return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
+        }
+
+        //queryString := "{\"selector\":{\"Hash\":\"" + hash + "\"}}"
+        String queryString = "{\"selector\":" + args.get(0)+ "}";
+        System.out.println("queryString: " + queryString);
+        QueryResultsIterator<KeyValue> queryResultsIterator = stub.getQueryResult(queryString);
+        Iterator<KeyValue> iterator = queryResultsIterator.iterator();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+
+        boolean bArrayMemberAlreadyWritten = false;
+        while (iterator.hasNext()) {
+            KeyValue kv = iterator.next();
+            if (bArrayMemberAlreadyWritten) {
+                stringBuilder.append(",");
+            }
+            stringBuilder.append("{\"Key\":\"");
+            stringBuilder.append(kv.getKey());
+            stringBuilder.append("\", \"Record\":");
+            stringBuilder.append(kv.getStringValue());
+            stringBuilder.append("}");
+            bArrayMemberAlreadyWritten = true;
+        }
+        stringBuilder.append("]");
+        System.out.println("result: " + stringBuilder.toString());
+        return newSuccessResponse("success", stringBuilder.toString().getBytes());
+    }
+
+    private Response deleteRecordByKey(ChaincodeStub stub, List<String> args) {
+        int argsNeeded = 1;
+        if (args.size() != argsNeeded){
+            return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
+        }
+        String key = args.get(0);
+        stub.delState(key);
+        return newSuccessResponse("delete finished successfully");
+    }
+
 }
