@@ -259,13 +259,9 @@ public class BCGISChaincode extends ChaincodeBase {
         if (args.size() != argsNeeded){
             return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
         }
-
-        //queryString := "{\"selector\":{\"Hash\":\"" + hash + "\"}}"
         String queryString = "{\"selector\":" + args.get(0)+ "}";
-        System.out.println("queryString: " + queryString);
         QueryResultsIterator<KeyValue> queryResultsIterator = stub.getQueryResult(queryString);
         Iterator<KeyValue> iterator = queryResultsIterator.iterator();
-
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[");
 
