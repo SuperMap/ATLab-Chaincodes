@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class BcgisCC extends ChaincodeBase {
-    private static Log _logger = LogFactory.getLog(BCGISChaincode.class);
+    private static Log _logger = LogFactory.getLog(BcgisCC.class);
 
     public static void main(String[] args) {
         System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
@@ -37,7 +37,7 @@ public class BcgisCC extends ChaincodeBase {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-        new BCGISChaincode().start(args);
+        new BcgisCC().start(args);
     }
 
     @Override

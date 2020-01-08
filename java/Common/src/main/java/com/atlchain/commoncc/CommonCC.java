@@ -14,11 +14,11 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CommonCC extends ChaincodeBase {
-    private static Log _logger = LogFactory.getLog(BCGISChaincode.class);
+    private static Log _logger = LogFactory.getLog(CommonCC.class);
 
     public static void main(String[] args) {
         System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
-        new BCGISChaincode().start(args);
+        new CommonCC().start(args);
     }
 
     @Override
