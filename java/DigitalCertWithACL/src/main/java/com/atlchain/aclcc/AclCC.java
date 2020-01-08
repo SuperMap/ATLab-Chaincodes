@@ -1,4 +1,4 @@
-package com.atlchain.cc_digital_cert_with_acl;
+package com.atlchain.aclcc;
 
 import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.ssl.OpenSsl;
@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-public class DigitalCertWithACL extends ChaincodeBase {
+public class AclCC extends ChaincodeBase {
     private static Log _logger = LogFactory.getLog(com.atlchain.cc_digital_cert_with_acl.DigitalCertWithACL.class);
 
     public static void main(String[] args) {
