@@ -1,4 +1,4 @@
-package com.atlchain.cc_digital_cert_with_acl;
+package com.atlchain.aclcc;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

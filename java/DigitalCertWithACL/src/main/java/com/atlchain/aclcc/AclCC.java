@@ -1,4 +1,4 @@
-package com.atlchain.cc_digital_cert_with_acl;
+package com.atlchain.aclcc;
 
 import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.ssl.OpenSsl;
@@ -15,8 +15,8 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-public class DigitalCertWithACL extends ChaincodeBase {
-    private static Log _logger = LogFactory.getLog(com.atlchain.cc_digital_cert_with_acl.DigitalCertWithACL.class);
+public class AclCC extends ChaincodeBase {
+    private static Log _logger = LogFactory.getLog(AclCC.class);
 
     public static void main(String[] args) {
         System.setProperty("file.encoding","UTF-8");
@@ -31,7 +31,7 @@ public class DigitalCertWithACL extends ChaincodeBase {
             e.printStackTrace();
         }
         System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
-        new com.atlchain.cc_digital_cert_with_acl.DigitalCertWithACL().start(args);
+        new AclCC().start(args);
     }
 
     @Override

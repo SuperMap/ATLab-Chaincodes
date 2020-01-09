@@ -1,4 +1,4 @@
-package com.supermap.atlab.chaincode;
+package com.atlchain.bimcc;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;

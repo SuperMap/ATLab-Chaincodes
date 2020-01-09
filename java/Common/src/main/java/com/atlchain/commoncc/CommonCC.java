@@ -1,4 +1,4 @@
-package com.atlchain.bcgiscc;
+package com.atlchain.commoncc;
 
 import io.netty.handler.ssl.OpenSsl;
 import org.apache.commons.logging.Log;
@@ -9,16 +9,31 @@ import org.hyperledger.fabric.shim.ledger.KeyModification;
 import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
 
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 
-public class BCGISChaincode extends ChaincodeBase {
-    private static Log _logger = LogFactory.getLog(BCGISChaincode.class);
+public class CommonCC extends ChaincodeBase {
+    private static Log _logger = LogFactory.getLog(CommonCC.class);
 
     public static void main(String[] args) {
+        // Set charset encode
+        System.setProperty("file.encoding","UTF-8");
+
+        try {
+            Field charset = Charset.class.getDeclaredField("defaultCharset");
+            charset.setAccessible(true);
+            charset.set(null,null);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
-        new BCGISChaincode().start(args);
+        new CommonCC().start(args);
     }
 
     @Override
