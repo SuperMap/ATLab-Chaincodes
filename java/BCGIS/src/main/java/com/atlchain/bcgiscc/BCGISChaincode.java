@@ -3,11 +3,13 @@ package com.atlchain.bcgiscc;
 import io.netty.handler.ssl.OpenSsl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hyperledger.fabric.protos.peer.ChaincodeShim;
 import org.hyperledger.fabric.shim.ChaincodeBase;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 import org.hyperledger.fabric.shim.ledger.KeyModification;
 import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
+import org.hyperledger.fabric.shim.ledger.QueryResultsIteratorWithMetadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -79,6 +81,9 @@ public class BCGISChaincode extends ChaincodeBase {
             }
             if (func.equals("GetRecordBySelector")) {
                 return getRecordBySelector(stub, params);
+            }
+            if(func.equals("GetRecordBySelectorByPagination")){
+                return getRecordBySelectorByPagination(stub, params);
             }
             if(func.equals("DeleteRecordByKey")){
                 return deleteRecordByKey(stub, params);
@@ -261,6 +266,7 @@ public class BCGISChaincode extends ChaincodeBase {
         }
         String queryString = "{\"selector\":" + args.get(0)+ "}";
         QueryResultsIterator<KeyValue> queryResultsIterator = stub.getQueryResult(queryString);
+//        stub.getQueryResultWithPagination(queryString, 1000, "1");
         Iterator<KeyValue> iterator = queryResultsIterator.iterator();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[");
@@ -280,6 +286,53 @@ public class BCGISChaincode extends ChaincodeBase {
         }
         stringBuilder.append("]");
         System.out.println("result: " + stringBuilder.toString());
+        return newSuccessResponse("success", stringBuilder.toString().getBytes());
+    }
+
+    private Response getRecordBySelectorByPagination(ChaincodeStub stub, List<String> args) {
+        int argsNeeded = 3;
+        if (args.size() != argsNeeded){
+            return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
+        }
+        String queryString = "{\"selector\":" + args.get(0)+ "}";
+        String pagsize = args.get(1);
+        String bookmark = args.get(2);
+        /**
+         * 查询语句如下，第一次书签是空的，查询之后返回一个唯一标志，下次查询时带入即可，直到查询得到的值为空则停止查询
+         * peer chaincode query -C myc1 -n marbles -c '{"Args":["queryMarblesWithPagination","{\"selector\":{\"owner\":\"tom\"}}","3",""]}'
+         */
+        QueryResultsIteratorWithMetadata<KeyValue> queryResultsWithMetadata =
+                stub.getQueryResultWithPagination(queryString, Integer.valueOf(pagsize), bookmark);
+        QueryResultsIterator<KeyValue> queryResultsIterator =
+                (QueryResultsIterator<KeyValue>) stub.getQueryResultWithPagination(queryString, Integer.valueOf(pagsize), bookmark);
+        // get Data
+        Iterator<KeyValue> iterator = queryResultsIterator.iterator();
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        boolean bArrayMemberAlreadyWritten = false;
+        while(iterator.hasNext()){
+            KeyValue kv = iterator.next();
+            if (bArrayMemberAlreadyWritten) {
+                stringBuilder.append(",");
+            }
+            stringBuilder.append("{\"Key\":\"");
+            stringBuilder.append(kv.getKey());
+            stringBuilder.append("\", \"Record\":");
+            stringBuilder.append(kv.getStringValue());
+            stringBuilder.append("}");
+            bArrayMemberAlreadyWritten = true;
+        }
+        // get BookMark
+        String reBookMark = queryResultsWithMetadata.getMetadata().getBookmark();
+        stringBuilder.append(",");
+        stringBuilder.append("{\"Key\":\"");
+        stringBuilder.append("bookmark");
+        stringBuilder.append("\", \"Record\":");
+        stringBuilder.append("\"" + reBookMark + "\"");
+        stringBuilder.append("}");
+        System.out.println("===========>>>" + reBookMark);
+
+        stringBuilder.append("]");
         return newSuccessResponse("success", stringBuilder.toString().getBytes());
     }
 
