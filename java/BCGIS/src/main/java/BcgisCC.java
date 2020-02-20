@@ -1,9 +1,6 @@
-package com.atlchain.bcgiscc;
-
 import io.netty.handler.ssl.OpenSsl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hyperledger.fabric.protos.peer.ChaincodeShim;
 import org.hyperledger.fabric.shim.ChaincodeBase;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 import org.hyperledger.fabric.shim.ledger.KeyModification;
@@ -11,14 +8,8 @@ import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIteratorWithMetadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +24,7 @@ public class BcgisCC extends ChaincodeBase {
         try {
             Field charset = Charset.class.getDeclaredField("defaultCharset");
             charset.setAccessible(true);
-            charset.set(null,null);
+            charset.set(null, null);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -75,6 +66,9 @@ public class BcgisCC extends ChaincodeBase {
             }
             if (func.equals("GetRecordByKeyRangeByte")) {
                 return getRecordByKeyRangeByte(stub, params);
+            }
+            if (func.equals("GetRecordByRangeWithPagination")){
+                return getRecordByRangeWithPagination(stub, params);
             }
             if (func.equals("GetRecordByKeyRangeByteNoBase64")) {
                 return getRecordByKeyRangeByteNoBase64(stub, params);
@@ -239,6 +233,7 @@ public class BcgisCC extends ChaincodeBase {
         if (args.size() != argsNeeded){
             return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
         }
+
         String startKey = args.get(0);
         String endKey = args.get(1);
         StringBuilder strBuilder = new StringBuilder("");
@@ -335,6 +330,52 @@ public class BcgisCC extends ChaincodeBase {
         stringBuilder.append("]");
         return newSuccessResponse("success", stringBuilder.toString().getBytes());
     }
+
+    private Response getRecordByRangeWithPagination(ChaincodeStub stub, List<String> args) {
+        int argsNeeded = 4;
+        if (args.size() != argsNeeded){
+            return newErrorResponse("Incorrect number of arguments.Got" + args.size() + ", Expecting " + argsNeeded);
+        }
+        String startKey = args.get(0);
+        String endKey = args.get(1);
+        String pagsize = args.get(2);
+        String bookmark = args.get(3);
+        QueryResultsIteratorWithMetadata<KeyValue> queryResultsWithMetadata =
+                stub.getStateByRangeWithPagination(startKey, endKey, Integer.valueOf(pagsize), bookmark);
+        QueryResultsIterator<KeyValue> queryResultsIterator =
+                (QueryResultsIterator<KeyValue>) stub.getStateByRangeWithPagination(startKey, endKey, Integer.valueOf(pagsize), bookmark);
+        // get Data
+        Iterator<KeyValue> iterator = queryResultsIterator.iterator();
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        boolean ArrayMemberAlreadyWritten = false;
+        while(iterator.hasNext()){
+            KeyValue kv = iterator.next();
+            if (ArrayMemberAlreadyWritten) {
+                stringBuilder.append(",");
+            }
+            stringBuilder.append(Base64.getEncoder().encodeToString(kv.getValue()));
+            ArrayMemberAlreadyWritten = true;
+        }
+
+        // get BookMark
+        String reBookMark = queryResultsWithMetadata.getMetadata().getBookmark();
+        stringBuilder.append(",");
+        stringBuilder.append(reBookMark);
+
+//        System.out.println("===========>>>" + reBookMark);
+
+        String message = "Query key->\"" + argsNeeded + "\" successfully";
+        return newSuccessResponse(message, stringBuilder.toString().getBytes());
+    }
+
+
+
+
+
+
+
 
     private Response deleteRecordByKey(ChaincodeStub stub, List<String> args) {
         int argsNeeded = 1;
