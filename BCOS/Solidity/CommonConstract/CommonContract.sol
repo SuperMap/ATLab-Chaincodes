@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 import "./Table.sol";
 
-contract CommonConstract {
+contract CommonContract {
     event CreateResult(int256 count);
     event InsertResult(int256 count);
     event UpdateResult(int256 count);
@@ -16,8 +16,8 @@ contract CommonConstract {
         tableFactory.createTable(TABLE_NAME, "name", "item_id,item_name");
     }
 
-    //select records
-    function select(string name)
+    //select records with condition
+    function select(string name, int256 item_id)
         public
         view
         returns (string[], int256[], string[])
@@ -25,6 +25,7 @@ contract CommonConstract {
         Table table = tableFactory.openTable(TABLE_NAME);
 
         Condition condition = table.newCondition();
+        condition.EQ("item_id", item_id);
 
         Entries entries = table.select(name, condition);
         string[] memory user_name_bytes_list = new string[](
@@ -95,3 +96,4 @@ contract CommonConstract {
         return count;
     }
 }
+
